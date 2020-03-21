@@ -57,7 +57,36 @@ class Content extends Component {
     );
   }
 }
+
+class ContentCreate extends Component {
+  state = {
+    title:'',
+    dsec:''
+  }
+  changeFormHandler(ev){
+    this.setState({[ev.target.name]:ev.target.value});
+  }
+  render(){
+    return(
+      <article>
+        <form onSubmit={function(ev){
+          ev.preventDefault();
+          this.props.onSubmit(this.state);
+        }.bind(this)}>
+          <p><input type="text" placeholder="title" name="title" value=
+          {this.state.title} onChange={this.changeFormHandler.bind
+          (this)}></input></p>
+          <p><textarea placeholder="description" name="dsec" value=
+          {this.state.dsec} onChange={this.changeFormHandler.bind
+          (this)}></textarea></p>
+          <p><input type="submit"></input></p>
+        </form>
+      </article>
+    )
+  }
+}
 class App extends Component {
+  last_content_id = 3;
   state = {
     mode:'read',
     selected_content_id:3,
@@ -85,7 +114,42 @@ class App extends Component {
         title:'Welcome',
         desc:'Hello, React!!!'
       }}></Content>
+    } else if(this.state.mode === 'create'){
+      return <ContentCreate onSubmit={function(formData){
+        console.log(formData);
+        this.last_content_id = this.last_content_id + 1;
+        formData.id = this.last_content_id;
+        var newContents = Object.assign([], this.state.contents)
+        newContents.push(formData);
+        this.setState({
+          contents:newContents,
+          selected_content_id:this.last_content_id,
+          mode:'read'
+        });
+      }.bind(this)}></ContentCreate>
     }
+  }
+  getControlComponent(){
+    return[
+      <a key="1" href="/create" onClick={function(ev){
+        ev.preventDefault();
+        this.setState({mode:'create'})
+      }.bind(this)}>create</a>,
+      <a key="2" href="/update" onClick={function(ev){
+        ev.preventDefault();
+      }.bind(this)}>update</a>,
+      <input key="3" type="button" href="/delete" onClick={function(){
+        var newContents = this.state.contents.filter(function(el){
+          if(el.id !== this.state.selected_content_id){
+            return el;
+          }
+        }.bind(this));
+        this.setState({
+          contents:newContents,
+          mode:'welcome'
+        })
+      }.bind(this)} value="delete"></input>
+    ];
   }
   render() {
     var content = this.getSelectedContent();
@@ -102,6 +166,7 @@ class App extends Component {
             mode:'read'
           });
         }.bind(this)} data={this.state.contents}></Toc>
+        {this.getControlComponent()}
         {this.getContentComponent()}
       </div>
     );
