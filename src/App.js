@@ -7,57 +7,102 @@ class Subject extends Component {
   render(){
     return(
       <header>
-        <h1>{this.props.title}</h1>
+        <h1><a href="/" onClick={function(ev){
+          ev.preventDefault();
+          this.props.onClick();
+        }.bind(this)}>{this.props.title}</a></h1>
           {this.props.sub}
-      </header>
+      </header> 
     );
   }
 }
 
 class Toc extends Component {
-  render() {
-
-    var list = [];
-    var i = 0;
+  render(){
+    var list=[];
+    var i=0;
     while(i<this.props.data.length){
       var data = this.props.data[i];
-      list.push(<li key={data.id}><a href={data.id+'.html'}>{data.title}</a></li>)
-      i=i+1;
+      list.push(
+        <li key={data.id}>
+          <a href={data.id+'.html'} onClick={function(id, ev){
+            ev.preventDefault();
+            this.props.onSelect(id);
+          }.bind(this, data.id)}>
+            {data.title}
+          </a>
+        </li>
+        );
+      i = i + 1;
     }
     return(
       <nav>
-        <oi>
+        <ol>
           {list}
-        </oi>
+        </ol>
       </nav>
     );
   }
 }
 
 class Content extends Component {
-  render() {
+  render(){
     return(
-      <article>
-        <h2>{this.props.title}</h2>
-         {this.props.dsec}
-      </article>
+      <nav>
+        <ol>
+          <h1>{this.props.data.title}</h1>
+            {this.props.data.desc}
+        </ol>
+      </nav>
     );
   }
 }
 class App extends Component {
   state = {
+    mode:'read',
+    selected_content_id:3,
     contents:[
-      {id:1, title:'HTML', dsec:'HTML is for information'},
-      {id:2, title:'CSS', dsec:'CSS is for design'},
-      {id:3, title:'JavaScript', dsec:'JavaScript is for interaction'}
+      {id:1, title:'HTML', desc:'HTML is for Information'},
+      {id:2, title:'CSS', desc:'CSS is for design'},
+      {id:3, title:'JavaScript', desc:'JavaScript is for intersaction'}
     ]
   }
+  getSelectedContent(){
+    var i = 0;
+    while(i < this.state.contents.length){
+      var data = this.state.contents[i];
+      if(this.state.selected_content_id === data.id){
+        return data;
+      }
+      i = i + 1;
+    }
+  }
+  getContentComponent(){
+    if(this.state.mode === 'read'){
+      return <Content data={this.getSelectedContent()}></Content>
+    } else if(this.state.mode === 'welcome') {
+      return <Content data={{
+        title:'Welcome',
+        desc:'Hello, React!!!'
+      }}></Content>
+    }
+  }
   render() {
+    var content = this.getSelectedContent();
+    console.log(content);
     return (
       <div className="App">
-        <Subject title="Web" sub="World Wide Web"></Subject>
-        <Toc data={this.state.contents}></Toc>
-        <Content title="HTML" dsec="HTML is for info"></Content>
+        <Subject onClick={function(){
+          this.setState({mode:'welcome'})
+        }.bind(this)} title="WEB" sub="World Wide Web"></Subject>
+        <Toc onSelect={function(id){
+          // this.state.selected_content_id 의 값을 id으로 바꿔라!
+          this.setState({
+            selected_content_id:id,
+            mode:'read'
+          });
+        }.bind(this)} data={this.state.contents}></Toc>
+        {this.getContentComponent()}
       </div>
     );
   }
